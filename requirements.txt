@@ -1,0 +1,49 @@
+
+# ==========================================
+# Automated Statistical Analyst
+# Python dependencies
+# ==========================================
+
+# 1. Application interface
+streamlit
+
+# 2. Data manipulation and ingestion
+pandas
+numpy
+polars
+pyarrow
+openpyxl
+fastexcel
+
+# 3. Statistical analysis
+scipy
+statsmodels
+pingouin
+
+# 4. Machine learning
+scikit-learn
+xgboost
+
+# 5. Visualisation
+plotly
+matplotlib
+seaborn
+altair
+
+# 6. Data validation and profiling
+pydantic
+pandera
+ydata-profiling
+
+# 7. File handling
+python-dotenv
+python-multipart
+
+# 8. Testing and code quality
+pytest
+pytest-cov
+ruff
+
+# 9. Jupyter / exploratory development
+jupyterlab
+ipykernel
