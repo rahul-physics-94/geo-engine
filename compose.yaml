@@ -1,0 +1,25 @@
+
+services:
+  geo-engine:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: geo-engine
+
+    ports:
+      - "8501:8501"
+
+    volumes:
+      - ./dataengine:/app/dataengine
+      - ./causalvalidator:/app/causalvalidator
+      - ./counterfactualengine:/app/counterfactualengine
+      - ./experimentengine:/app/experimentengine
+      - ./treatmentengine:/app/treatmentengine
+      - ./app:/app/app
+      - ./output:/app/output
+
+    environment:
+      PYTHONUNBUFFERED: "1"
+
+    restart: unless-stopped
