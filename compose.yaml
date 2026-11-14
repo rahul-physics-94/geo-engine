@@ -21,5 +21,6 @@ services:
 
     environment:
       PYTHONUNBUFFERED: "1"
+      PYTHONPATH: "/app"
 
     restart: unless-stopped

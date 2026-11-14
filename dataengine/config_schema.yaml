@@ -1,0 +1,160 @@
+
+datasets:
+
+  geo:
+    name: geo_dataset
+    version: "1.0"
+    description: "Geographical KPI observations"
+
+    columns:
+      date:
+        dtype: datetime
+        description: "Date of the data record"
+        required: true
+
+      city:
+        dtype: str
+        description: "Name of the city"
+        required: true
+
+      region:
+        dtype: str
+        description: "Geographical region identifier"
+        required: false
+
+      kpi_value:
+        dtype: float
+        description: "Observed value of the KPI"
+        required: true
+
+      kpi_type:
+        dtype: str
+        description: "Type of KPI being measured"
+        required: true
+
+  population:
+    name: population_dataset
+    version: "1.0"
+    description: "Demographic and socioeconomic characteristics"
+
+    columns:
+      id:
+        dtype: int
+        description: "Unique record identifier"
+        required: true
+
+      city:
+        dtype: str
+        description: "Name of the city"
+        required: true
+
+      region:
+        dtype: str
+        description: "Geographical region identifier"
+        required: false
+
+      population:
+        dtype: int
+        description: "Population count"
+        required: true
+        min_value: 0
+
+      number_of_households:
+        dtype: int
+        description: "Number of households in the city"
+        required: false
+        min_value: 0
+
+      average_household_size:
+        dtype: float
+        description: "Average household size"
+        required: false
+        min_value: 0
+
+      median_age:
+        dtype: float
+        description: "Median age of the population"
+        required: false
+        min_value: 0
+        max_value: 120
+
+      employment_rate:
+        dtype: float
+        description: "Employment rate (percentage)"
+        required: false
+        min_value: 0
+        max_value: 100
+
+      disposable_income:
+        dtype: float
+        description: "Average disposable household income"
+        required: false
+        min_value: 0
+
+  confounders:
+    name: confounder_dataset
+    version: "1.0"
+    description: "External factors affecting geographical demand"
+
+    columns:
+      id:
+        dtype: int
+        description: "Unique record identifier"
+        required: true
+
+      city:
+        dtype: str
+        description: "Name of the city"
+        required: true
+
+      region:
+        dtype: str
+        description: "Geographical region identifier"
+        required: false
+
+      date:
+        dtype: datetime
+        description: "Date associated with the observations"
+        required: true
+
+      avg_rainfall:
+        dtype: float
+        description: "Average rainfall in millimetres"
+        required: true
+        min_value: 0
+
+      avg_temperature:
+        dtype: float
+        description: "Average temperature in Celsius"
+        required: true
+
+      avg_sunshine_hours:
+        dtype: float
+        description: "Average sunshine hours"
+        required: true
+        min_value: 0
+
+      competition_index:
+        dtype: float
+        description: "Competitive intensity index"
+        required: false
+        min_value: 0
+
+      market_saturation:
+        dtype: float
+        description: "Market saturation index"
+        required: false
+        min_value: 0
+
+      public_transport_availability:
+        dtype: float
+        description: "Public transport availability index"
+        required: false
+        min_value: 0
+
+      public_holidays:
+        dtype: int
+        description: "Number of public holidays in the observation period"
+        required: false
+        min_value: 0
+

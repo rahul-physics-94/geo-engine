@@ -47,3 +47,4 @@ ruff
 # 9. Jupyter / exploratory development
 jupyterlab
 ipykernel
+pydantic
