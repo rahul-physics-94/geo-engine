@@ -3,49 +3,33 @@ import numpy as np
 from typing import Literal
 import re
 
-geo_pattern = {
-
+geo_pattern: dict[str, str] = {
     "city": r"^[^\W\d_][\w\s.'’()-]*$",
-
     "postcode": r"^[A-Za-z0-9][A-Za-z0-9\s-]{1,11}$",
-
     "latitude": r"^[+-]?(?:90(?:\.0+)?|[0-8]?\d(?:\.\d+)?)$",
-
     "longitude": r"^[+-]?(?:180(?:\.0+)?|1[0-7]\d(?:\.\d+)?|[0-9]?\d(?:\.\d+)?)$",
-
     "state": r"^[^\W\d_][\w\s.'’()-]*$",
-
     "country": r"^[^\W\d_][\w\s.'’()-]*$",
-
     "region": r"^[^\W\d_][\w\s.'’()-]*$",
-
     "district": r"^[^\W\d_][\w\s.'’()-]*$",
-
     "province": r"^[^\W\d_][\w\s.'’()-]*$",
-
     "municipality": r"^[^\W\d_][\w\s.'’()-]*$",
-
     "borough": r"^[^\W\d_][\w\s.'’()-]*$",
-
     "ward": r"^[^\W\d_][\w\s.'’()-]*$",
-
     "census_tract": r"^\d{1,6}(?:\.\d{1,6})?$",
-
     "census_block": r"^\d{1,10}$",
-
     "zip_code": r"^[A-Za-z0-9][A-Za-z0-9\s-]{1,11}$",
-
     "fips_code": r"^\d{5}$",
 }
 
-geo_codes = Literal['city', 'postcode', 'latitude', 'longitude', 'state', 'country', 'region', 'district', 'province', 'municipality', 'borough', 'ward', 'census_tract', 'census_block', 'zip_code', 'fips_code']
+geo_codes = list(geo_pattern)
 
 class DataChecker:
     """
     A class for validating datasets against a given schema.
     """
 
-    def __init__(self, df: pd.DataFrame, schema: dict, dataset_type: str):
+    def __init__(self, df: pd.DataFrame, schema: dict, dataset_type: str) -> None:
         """
         Initialize the DataValidator with a DataFrame and a schema.
 
@@ -54,25 +38,22 @@ class DataChecker:
             schema (dict): The schema to validate against.
             dataset_type (str): The type of dataset (e.g., "geo", "population", "confounders").
         """
+        if not isinstance(df, pd.DataFrame):
+            raise TypeError('df must be a pandas dataframe')
+        
         self.df = df
         self.schema = schema
         self.dataset_type = dataset_type
+    @staticmethod
+    def _result(success: bool, message:str, **details:any) -> dict:
+        return {
+            "success": success,
+            "message": message,
+            **details,
+        }
 
-    def NullChecker(self, df: pd.DataFrame) -> bool:
-        """
-        Check for null values in the DataFrame.
 
-        Returns:
-            bool: True if there are no null values, False otherwise.
-        """
-        null_counts = df.isnull().sum()
-        if null_counts.any():
-            print("Null values found in the following columns:")
-            print(null_counts[null_counts > 0])
-            return False
-        return True
-
-    def GeoChecker(self, df: pd.DataFrame) -> bool:
+    def GeoChecker(self, df: pd.DataFrame) -> dict:
         """
         Check for valid geographic coordinates in the DataFrame.
 
@@ -102,6 +83,8 @@ class DataChecker:
                         elif temp_df['count'][i] == 0:
                             print(f"{geo_codes[x].replace('_', ' ').title()} {temp_df[geo_codes[x]][i]} has zero count.")
                             return False
+                        elif df.duplicated(subset=[geo_codes[x],df.select_dtypes['datetime64[ns]', 'datetime64[ns, UTC]'].columns].sum()).any():
+                            print(f"There are duplicated dates for {temp_df[geo_codes[x]][i]}. Please remove the duplicated date and try again")
                         else:
                             return True
                     
@@ -144,35 +127,96 @@ class DataChecker:
             bool: True if all datetime columns are valid, False otherwise.
         """
         datetime_cols = df.select_dtypes(include=['datetime64[ns]', 'datetime64[ns, UTC]']).columns
-        for col in datetime_cols:
-            if not pd.api.types.is_datetime64_any_dtype(df[col]):
-                print(f"Column '{col}' is not a valid datetime column.")
-                return False
-            elif df[col].isnull().all():
-                print(f"Column '{col}' contains only NaN values.")
-                return False
-            elif df[col].nunique() <= 1:
-                print(f"Column '{col}' has insufficient unique values for datetime validation.")
-                return False
-            elif df[col].frequency().nunique() < 2:
-                print(f"Column '{col}' has insufficient frequency variation for datetime validation.")
-                return False
-            elif df[col].is_monotonic_increasing or df[col].is_monotonic_decreasing:
-                print(f"Column '{col}' is monotonic and may not be suitable for datetime validation.")
-                return False
-            else:
-                print(f"Column '{col}' passed all datetime validations.")
-            dates = pd.to_datetime(df[col]).drop_duplicates().sort_values()
-            diffs = dates.diff().dt.days
-            most_common_diff = diffs.mode()[0]
-            if (diffs != most_common_diff).any():
-                print(f"Column '{col}' has inconsistent time intervals.")
-                return False
-            elif most_common_diff <= 0:
-                print(f"Column '{col}' has non-positive time intervals. The date time requires further sorting and cleaning.")
-                return False
-            else:
-                print(f"Column '{col}' has consistent time intervals.")
+        try:
+            for col in datetime_cols:
+                if not pd.api.types.is_datetime64_any_dtype(df[col]):
+                    print(f"Column '{col}' is not a valid datetime column.")
+                    return False
+                elif df[col].isnull().all():
+                    print(f"Column '{col}' contains only NaN values.")
+                    return False
+                elif df[col].nunique() <= 1:
+                    print(f"Column '{col}' has insufficient unique values for datetime validation.")
+                    return False
+                elif df[col].frequency().nunique() < 2:
+                    print(f"Column '{col}' has insufficient frequency variation for datetime validation.")
+                    return False
+                elif df[col].is_monotonic_increasing or df[col].is_monotonic_decreasing:
+                    print(f"Column '{col}' is monotonic and may not be suitable for datetime validation.")
+                    return False
+                else:
+                    print(f"Column '{col}' passed all datetime validations.")
+                dates = pd.to_datetime(df[col]).drop_duplicates().sort_values()
+                diffs = dates.diff().dt.days
+                most_common_diff = diffs.mode()[0]
+                if (diffs != most_common_diff).any():
+                    print(f"Column '{col}' has inconsistent time intervals.")
+                    return False
+                elif most_common_diff <= 0:
+                    print(f"Column '{col}' has non-positive time intervals. The date time requires further sorting and cleaning.")
+                    return False
+                else:
+                    print(f"Column '{col}' has consistent time intervals.")
+        except Exception as e:
+            print(f'Error in DateTimeChecker:{e}')
+        
 
         return True
+
+    def NumericalIntegrity(self, df: pd.DataFrame):
+        """
+        Check for valid numerical columns in the DataFrame.
+
+        Returns:
+            bool: True if all numerical columns are valid, False otherwise.
+        """
+        numerical_cols = df.select_dtypes(include=[np.number]).columns
+        result = {
+            "success" : False,
+            "message": None,
+            "errors":[],
+            "missing_values":{},
+            "invalid_columns":[],
+            "validated_columns":[]
+        }
+        try:
+            for col in numerical_cols:
+                if df[col].isnull().all():
+                    result['errors'].append(
+                        f"Column '{col}' contains only NaN values."
+                        )
+                    result['invalid_columns'].append(col)
+                
+                elif df[col].nunique() <= 1:
+                    result['errors'].append(
+                        f"Column '{col}' has insufficient unique values for numerical validation."
+                        )
+                    result['invalid_columns'].append(col)
+                elif (df[col] < 0).any():
+                    result['errors'].append(
+                        f"Column '{col}' contains negative values."
+                        )
+                    result['invalid_columns'].append(col)
+                else:
+                    result['validated_columns'].append(col)
+
+        except Exception as e:
+            result['message'].append("Numerical Validation Failed")
+            result['errors'].append(
+                str(e)
+                )
+        else:
+            result['missing_values'] = (
+                df[numerical_cols].isnull.sum().to_dict()
+            )
+            if result['invalid_columns']:
+                result['message'] = "Numerical Validation Failed for some columns"
+            else:
+                result['success'] = True
+                result['message'] = 'All Numerical Validation Checks passed'
+        finally:
+            result['execution_complete'] = True        
+
+
+        return result
 
