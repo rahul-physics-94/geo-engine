@@ -7,9 +7,9 @@ from pathlib import Path
 import pandas as pd
 
 
-class column_definition(BaseModel):
+class ColumnDefinition(BaseModel):
     """
-    column_definition is a class that defines the structure and types of columns in the dataset.
+    ColumnDefinition is a class that defines the structure and types of columns in the dataset.
     It uses Pydantic's BaseModel to ensure data integrity and validation.
     """
     dtype: Literal["int", "float", "str", "bool", "datetime"]
@@ -18,25 +18,25 @@ class column_definition(BaseModel):
     max_value: float | None = None      
     allowed_values: List[Any] | None = None
 
-class dataset_definition(BaseModel):
+class DatasetDefinition(BaseModel):
     """
-    dataset_definition is a class that defines the structure of the dataset.
+    DatasetDefinition is a class that defines the structure of the dataset.
     It uses Pydantic's BaseModel to ensure data integrity and validation.
     """
     name: str
     version: str
     description: str | None = None
-    columns: Dict[str, column_definition]
+    columns: Dict[str, ColumnDefinition] = Field(default_factory=dict)
 
-class schema_definition(BaseModel):
+class SchemaDefinition(BaseModel):
     """
-    schema_definition is a class that defines the structure of the schema.
+    SchemaDefinition is a class that defines the structure of the schema.
     It uses Pydantic's BaseModel to ensure data integrity and validation.
     """
-    datasets: dict[str, dataset_definition]
+    datasets: dict[str, DatasetDefinition] = Field(default_factory=dict)
 
 
-def load_schema(schema_path: Union[str, Path]) -> schema_definition:
+def LoadSchema(schema_path: Union[str, Path]) -> SchemaDefinition:
     """
     Load and validate a schema from a YAML file.
 
@@ -48,14 +48,14 @@ def load_schema(schema_path: Union[str, Path]) -> schema_definition:
         schema_dict = yaml.safe_load(file)
 
     # Validate and create a schema_definition instance
-    validated_schema = schema_definition(**schema_dict)
+    validated_schema = SchemaDefinition(**schema_dict)
     return validated_schema
 
 
     
-def data_validator(
+def ValidateDataFrame(
         df:pd.DataFrame,
-        schema: schema_definition,
+        schema: SchemaDefinition,
         dataset_type: str   
 ):
     """
@@ -63,7 +63,7 @@ def data_validator(
 
     Args:
         df (pd.DataFrame): The DataFrame to validate.
-        schema (schema_definition): The schema to validate against.
+        schema (SchemaDefinition): The schema to validate against.
         dataset_type (str): The type of dataset to validate (e.g., "geo_dataset", "time_series_dataset").
 
     Returns:
